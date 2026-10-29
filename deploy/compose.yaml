@@ -1,0 +1,45 @@
+services:
+  api:
+    build:
+      context: ..
+    command: ["spatial-monitor", "api", "--address", "0.0.0.0", "--keys-file", "/run/secrets/api-keys"]
+    user: "${SPATIAL_UID:-10001}:${SPATIAL_GID:-10001}"
+    secrets:
+      - api-keys
+    environment:
+      SM_API_ALLOWED_ORIGINS: ${SM_API_ALLOWED_ORIGINS:-}
+    expose:
+      - "8000"
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: 2
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  gateway:
+    image: caddy:2-alpine
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN to your public hostname}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+secrets:
+  api-keys:
+    file: ../.api-keys.json
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,19 @@
+point_id,depth_top,depth_bottom,lithology,stratum,description
+BH01,0,1,Fill,Fill,Synthetic demonstration interval
+BH01,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH01,2.5,4,Clay,Clay,Synthetic demonstration interval
+BH02,0,1,Fill,Fill,Synthetic demonstration interval
+BH02,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH02,2.5,4,Clay,Clay,Synthetic demonstration interval
+BH03,0,1,Fill,Fill,Synthetic demonstration interval
+BH03,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH03,2.5,4,Clay,Clay,Synthetic demonstration interval
+BH04,0,1,Fill,Fill,Synthetic demonstration interval
+BH04,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH04,2.5,4,Clay,Clay,Synthetic demonstration interval
+BH05,0,1,Fill,Fill,Synthetic demonstration interval
+BH05,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH05,2.5,4,Clay,Clay,Synthetic demonstration interval
+BH06,0,1,Fill,Fill,Synthetic demonstration interval
+BH06,1,2.5,Sand,Sand,Synthetic demonstration interval
+BH06,2.5,4,Clay,Clay,Synthetic demonstration interval
