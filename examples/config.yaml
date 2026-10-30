@@ -1,0 +1,67 @@
+# All sample values are synthetic. No regulatory thresholds are supplied.
+crs: EPSG:3826
+interpolation:
+  power: 2
+  grid_spacing: 1
+  max_distance: 10
+  min_width: 2
+  max_cells: 100000
+geology:
+  colors:
+    Fill: '#b79b75'
+    Sand: '#e9c46a'
+    Clay: '#83a598'
+parameters:
+  Zn:
+    transform: log10
+    colorscale: YlOrRd
+  ORP:
+    colorscale: RdBu
+# Map ORIGINAL column headers to canonical names. Workbook sheet names and CSV
+# filenames can be changed independently. Unspecified table settings keep defaults.
+# tables:
+#   samples:
+#     sheet: 01_樣品登錄
+#     columns:
+#       樣品編號: sample_id
+#       點位編號: point_id
+#       日期: date
+#       介質: medium
+#       深度上限: depth_top
+#       深度下限: depth_bottom
+#   analyses:
+#     sheet: 02_分析資料庫
+#     columns:
+#       樣品編號: sample_id
+#       分析項目: parameter
+#       濃度: value
+#       單位: unit
+#   points:
+#     sheet: 03_點位主檔
+#     columns:
+#       點位編號: point_id
+#       X: x
+#       Y: y
+# Custom parameters can be registered without modifying Python. The 'media' values
+# use canonical names: soil, water, groundwater, surface_water, air.
+# parameters:
+#   chloride:
+#     label: Chloride
+#     unit: mg/L
+#     media: [water, groundwater, surface_water]
+#     transform: none
+#     colorscale: Viridis
+#     valid_range: [0, null]
+#     thresholds: []
+# Thresholds require explicit provenance and applicability, for example:
+# thresholds:
+#   - kind: range
+#     value: [6.5, 8.5]
+#     label: Project target
+#     source: User-approved project specification
+#     conditions: Groundwater observations for this project only
+extensions:
+  correlation: false
+  geological_model: false
+  volume_interpolation: false
+  volume_statistics: false

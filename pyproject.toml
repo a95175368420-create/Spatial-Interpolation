@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spatial-monitor"
+version = "0.1.0"
+description = "Reproducible environmental monitoring and geology visualization"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26,<3", "pandas>=2.2,<3", "scipy>=1.12,<2",
+  "openpyxl>=3.1,<4", "PyYAML>=6,<7", "plotly>=6.3,<7",
+  "matplotlib>=3.8,<4", "streamlit>=1.50,<2", "pyproj>=3.6,<4",
+  "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "python-multipart>=0.0.18,<1"
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "httpx>=0.27,<1"]
+browser = ["playwright>=1.50,<2"]
+
+[project.scripts]
+spatial-monitor = "spatial_monitor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
