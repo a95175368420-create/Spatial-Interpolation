@@ -2,6 +2,7 @@
 .venv
 .env
 .api-keys.json
+.personal-site-password
 outputs
 __pycache__
 *.egg-info

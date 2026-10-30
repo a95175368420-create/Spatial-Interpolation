@@ -93,8 +93,8 @@ Caddy取得並更新TLS憑證，只有HTTPS入口對外開放，API埠不直接�
 
 ### Render等容器平台
 
-`render.yaml` 提供Render設定（starter為付費方案，需由平台帳號設定及啟用）。使用Docker部署，平台提供HTTPS網域；在平台的私密環境設定填入SM_API_KEYS_JSON。不要將金鑰寫進render.yaml。容器內綁定0.0.0.0:8000。其他平台可直接使用同一Dockerfile，對應服務埠8000並設定健康檢查。
+`deploy/render-api.yaml` 保留獨立API的Render設定（starter為付費方案，需由平台帳號設定及啟用）。根目錄`render.yaml`目前預設部署個人圖形測試網站。使用Docker部署，平台提供HTTPS網域；在平台的私密環境設定填入SM_API_KEYS_JSON。不要將金鑰寫進render.yaml。容器內綁定0.0.0.0:8000。其他平台可直接使用同一Dockerfile，對應服務埠8000並設定健康檢查。
 
 伺服器對伺服器呼叫不需要CORS。若從另一個網站的瀏覽器前端呼叫，設定 `SM_API_ALLOWED_ORIGINS=https://your-app.example`；多個來源逗號分隔，不接受萬用字元。不要將正式共用金鑰嵌入公開前端JavaScript；應透過自己的後端轉呼叫。
 
-本專案的部署分支可由 [Deploy to Render](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fa95175368420-create%2FSpatial-Interpolation%2Ftree%2Fcodex%2Fexternal-api) 開始：登入Render並授權讀取該GitHub儲存庫、選擇部署方案，再在私密欄位填入SM_API_KEYS_JSON（內容來自本機生成的.api-keys.json，請勿貼到公開issue或聊天）。SM_API_ALLOWED_ORIGINS無瀏覽器跨站需求時留空。確認費用並發布後，Render會提供實際HTTPS網址；取得網址後應重新執行遠端健康、授權與上傳下載檢查。
+若只需要個人網頁操作，請依 [個人測試入口](PERSONAL_SITE.md) 使用根目錄Blueprint。若要另外部署外部API，可在Render建立Docker Web Service並指定本儲存庫的`codex/external-api`分支；Docker預設命令為API，設定PORT=8000、健康路徑/healthz，並在私密環境設定填入SM_API_KEYS_JSON。也可在Blueprint部署選擇API設定檔`deploy/render-api.yaml`。發布後由Render分配實際HTTPS網址，再以遠端健康、授權及上傳下載檢查確認服務。

@@ -22,6 +22,9 @@ def main(argv=None):
     serve = sub.add_parser("serve")
     serve.add_argument("--port", type=int, default=8501)
     serve.add_argument("--address", default="127.0.0.1")
+    serve.add_argument("--password-file", help="Enable the personal test login using a private password file")
+    password = sub.add_parser("site-password", help="Create a private personal test password file")
+    password.add_argument("--output", default=".personal-site-password")
     api = sub.add_parser("api", help="Start the authenticated HTTP API")
     api.add_argument("--port", type=int, default=8000)
     api.add_argument("--address", default="127.0.0.1")
@@ -30,6 +33,18 @@ def main(argv=None):
     keys.add_argument("--client", action="append", required=True)
     keys.add_argument("--output", default=".api-keys.json")
     args = parser.parse_args(argv)
+    if args.command == "site-password":
+        import os
+        import secrets
+        try:
+            descriptor = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "w") as handle:
+                handle.write(secrets.token_urlsafe(24))
+            print(f"Private personal-site password saved to {args.output}; set it as SM_TEST_PASSWORD in your hosting platform.")
+            return 0
+        except OSError as exc:
+            print(f"Cannot create password file: {exc}", file=sys.stderr)
+            return 2
     if args.command == "api-keys":
         import os
         import re
@@ -57,6 +72,17 @@ def main(argv=None):
         uvicorn.run(application, host=args.address, port=args.port, workers=1, log_level="info")
         return 0
     if args.command == "serve":
+        if args.password_file:
+            import os
+            try:
+                password = Path(args.password_file).read_text().strip()
+                if len(password) < 16:
+                    raise ValueError("Password must contain at least 16 characters")
+            except (OSError, ValueError) as exc:
+                print(f"Cannot start personal site: {exc}", file=sys.stderr)
+                return 2
+            os.environ["SM_APP_MODE"] = "personal"
+            os.environ["SM_TEST_PASSWORD"] = password
         from streamlit.web import cli
         sys.argv = ["streamlit", "run", str(Path(__file__).with_name("app.py")),
                     "--server.port", str(args.port), "--server.address", args.address,

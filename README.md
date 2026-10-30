@@ -1,5 +1,7 @@
 # 環境空間工作台 · Spatial Interpolation
 
+先開啟 [個人測試網站部署入口](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fa95175368420-create%2FSpatial-Interpolation%2Ftree%2Fcodex%2Fexternal-api)，依 [個人測試說明](docs/PERSONAL_SITE.md) 設定一個密碼即可發布圖形網站；預設使用Render免費方案。
+
 以 Python 建立的多參數環境監測與地質整合工具。支援 Excel／CSV 匯入、可追溯資料檢核、2D 分布、時間與深度比較、地質柱狀與剖面、互動 3D 實測展示及離線成果輸出。
 
 內建 pH、EC、DO、DO 飽和度、ORP、TOC、Zn、水溫與濁度；可透過 YAML 增加其他連續數值參數。沒有內建法規判定值。`examples/demo` 是合成示範資料，不是實際調查結果。
@@ -161,4 +163,4 @@ Python 公開入口：`load_config`、`load_dataset`、`filter_observations`、`
 
 ## 外部HTTP API
 
-新增獨立HTTP服務，支援每位使用者API金鑰、Excel／CSV ZIP或JSON資料匯入、檢核、2D內插及成果下載。先執行 `spatial-monitor api-keys --client alice`，再執行 `spatial-monitor api --keys-file .api-keys.json`。完整端點、呼叫範例及HTTPS部署方式見 [API說明](docs/API.md)。Docker／Caddy與Render部署設定均已提供；仍需實際伺服器或雲端帳號才能取得公開網址。
+新增獨立HTTP服務，支援每位使用者API金鑰、Excel／CSV ZIP或JSON資料匯入、檢核、2D內插及成果下載。先執行 `spatial-monitor api-keys --client alice`，再執行 `spatial-monitor api --keys-file .api-keys.json`。完整端點、呼叫範例及HTTPS部署方式見 [API說明](docs/API.md)。Docker／Caddy與Render部署設定均已提供；API的Blueprint保留於`deploy/render-api.yaml`，預設`render.yaml`為個人圖形入口。仍需實際伺服器或雲端帳號才能取得公開網址。

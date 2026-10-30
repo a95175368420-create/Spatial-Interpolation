@@ -10,11 +10,13 @@ RUN --mount=type=secret,id=proxy_ca \
     else pip install --no-cache-dir -r requirements.lock; fi
 COPY pyproject.toml README.md ./
 COPY src ./src
+COPY examples ./examples
 RUN --mount=type=secret,id=proxy_ca \
     if [ -f /run/secrets/proxy_ca ]; then \
       PIP_CERT=/run/secrets/proxy_ca pip install --no-cache-dir --no-deps .; \
     else pip install --no-cache-dir --no-deps .; fi \
-    && useradd --uid 10001 --create-home spatial
+    && useradd --uid 10001 --create-home spatial \
+    && chmod -R a+rX /app/examples
 USER spatial
 EXPOSE 8000
 CMD ["spatial-monitor", "api", "--address", "0.0.0.0", "--port", "8000"]

@@ -12,6 +12,7 @@ import streamlit as st
 
 from spatial_monitor.config import load_config
 from spatial_monitor.io import load_dataset
+from spatial_monitor.personal import personal_mode, require_login, demo_path
 from spatial_monitor.selection import (compatible_groups, describe_group, filter_observations,
                                        layer_groups, require_metric_crs, attach_strata)
 from spatial_monitor.interpolation import interpolate_layer
@@ -55,12 +56,13 @@ def choose_group(frame, key):
 def main():
     st.set_page_config(page_title="環境空間工作台", page_icon="🌐", layout="wide")
     st.title("環境空間工作台")
+    require_login()
     st.caption("多參數監測 · 地質柱狀與剖面 · 2D / 3D空間展示")
-    default = Path(__file__).resolve().parents[2] / "examples" / "demo"
+    default = demo_path()
     with st.sidebar:
         st.header("資料來源")
-        source_mode = st.radio("選擇來源", ["範例／本機資料夾", "上傳Excel或CSV"])
-        source_path = st.text_input("資料夾或Excel路徑", str(default)) if source_mode.startswith("範例") else None
+        source_mode = st.radio("選擇來源", ["內建範例" if personal_mode() else "範例／本機資料夾", "上傳Excel或CSV"])
+        source_path = (default if personal_mode() else st.text_input("資料夾或Excel路徑", str(default))) if source_mode != "上傳Excel或CSV" else None
         uploads = st.file_uploader("Excel工作簿或多個CSV資料表", type=["xlsx", "csv"], accept_multiple_files=True) if source_path is None else []
         config_upload = st.file_uploader("欄位與參數設定（YAML，選填）", type=["yaml", "yml"])
         st.caption("基本資料表：samples、analyses、points；選填：geology、water_levels。可用YAML對應中文欄名。")

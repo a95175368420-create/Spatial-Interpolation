@@ -9,3 +9,4 @@ outputs/
 .streamlit/secrets.toml
 .env
 .api-keys.json
+.personal-site-password
