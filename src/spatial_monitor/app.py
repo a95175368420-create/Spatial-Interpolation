@@ -38,6 +38,18 @@ def invalidate_geology():
         st.session_state.pop(key, None)
 
 
+def reset_for_dataset(dataset):
+    """Keep uploads/authentication, but discard prior-site filters and derived results."""
+    token = fingerprint(dataset.observations, dataset.points, dataset.geology,
+                        dataset.water_levels, dataset.config, dataset.metadata)
+    if st.session_state.get("source-identity") != token:
+        keep = {"source-mode", "source-path", "source-uploads", "source-config", "source-crs", "personal-auth"}
+        for key in list(st.session_state):
+            if key not in keep:
+                del st.session_state[key]
+        st.session_state["source-identity"] = token
+
+
 def subset_points(dataset, observations):
     ids = observations["point_id"].dropna().unique()
     return dataset.points[dataset.points.point_id.isin(ids) & dataset.points.valid].copy()
@@ -61,11 +73,18 @@ def main():
     default = demo_path()
     with st.sidebar:
         st.header("資料來源")
-        source_mode = st.radio("選擇來源", ["內建範例" if personal_mode() else "範例／本機資料夾", "上傳Excel或CSV"])
-        source_path = (default if personal_mode() else st.text_input("資料夾或Excel路徑", str(default))) if source_mode != "上傳Excel或CSV" else None
-        uploads = st.file_uploader("Excel工作簿或多個CSV資料表", type=["xlsx", "csv"], accept_multiple_files=True) if source_path is None else []
-        config_upload = st.file_uploader("欄位與參數設定（YAML，選填）", type=["yaml", "yml"])
-        st.caption("基本資料表：samples、analyses、points；選填：geology、water_levels。可用YAML對應中文欄名。")
+        source_mode = st.radio("選擇來源", ["內建範例" if personal_mode() else "範例／本機資料夾", "上傳Excel或CSV"], key="source-mode")
+        source_path = (default if personal_mode() else st.text_input("資料夾或Excel路徑", str(default), key="source-path")) if source_mode != "上傳Excel或CSV" else None
+        uploads = st.file_uploader("Excel工作簿或多個CSV資料表", type=["xlsx", "csv"], accept_multiple_files=True, key="source-uploads") if source_path is None else []
+        config_upload = st.file_uploader("欄位與參數設定（YAML，選填）", type=["yaml", "yml"], key="source-config")
+        st.caption("監測資料庫v3.4可直接上傳，自動辨識場址及中文欄位。每次上傳一個場址；資料僅供目前工作階段使用。")
+        with st.expander("v3.4範例、空白範本與座標設定"):
+            for filename, label in [("monitoring_v34_demo.xlsx", "下載v3.4合成範例"), ("monitoring_v34_blank.xlsx", "下載v3.4空白範本")]:
+                example = default.parent / "workbooks" / filename
+                if example.is_file():
+                    st.download_button(label, example.read_bytes(), filename, on_click="ignore")
+            crs_override = st.selectbox("v3.4 TWD97座標分帶", ["依備註；未指定採121度", "EPSG:3826（121度）", "EPSG:3825（119度）"], key="source-crs")
+            st.caption("一般格式仍支援samples、analyses、points，以及選填的geology、water_levels。")
     try:
         with tempfile.TemporaryDirectory(prefix="spatial-import-") as directory:
             folder = Path(directory)
@@ -74,6 +93,8 @@ def main():
                 cfg_path = folder / "config.yaml"
                 cfg_path.write_bytes(config_upload.getvalue())
             config = load_config(cfg_path)
+            if crs_override.startswith("EPSG:"):
+                config["crs"] = crs_override.split("（")[0]
             if source_path is None:
                 if not uploads:
                     st.info("請選擇Excel或CSV資料；也可切換至內建範例體驗。")
@@ -88,6 +109,11 @@ def main():
     except (ValueError, OSError, KeyError) as exc:
         st.error(f"資料載入失敗：{exc}")
         return
+    config = dataset.config
+    reset_for_dataset(dataset)
+    if dataset.metadata:
+        st.success(f"已自動匯入 v3.4｜場址：{dataset.metadata['site']}｜樣品：{dataset.metadata['samples']}筆")
+        st.caption("土壤保留實際深度區間；水樣以採樣深度定位。ND及限定值保留於檢核資料，不代入內插。v3.4未提供地質區間，地質圖需另有資料。")
     observations = dataset.observations
     if observations.empty:
         st.warning("沒有分析紀錄；仍可檢視資料品質與地質資料。")

@@ -77,6 +77,7 @@ def export_dataset(dataset, config, output, *, max_maps=200):
         (output / f"{name}.csv").write_bytes(raw)
         hashes[name] = hashlib.sha256(raw).hexdigest()
     (output / "config.yaml").write_text(yaml.safe_dump(config, allow_unicode=True, sort_keys=True), encoding="utf-8")
+    (output / "import.json").write_text(json.dumps(dataset.metadata, ensure_ascii=False, indent=2), encoding="utf-8")
     versions = {p: importlib.metadata.version(p) for p in ["numpy", "pandas", "scipy", "plotly", "openpyxl", "matplotlib", "pyproj"]}
     figures = output / "figures"
     figures.mkdir()

@@ -156,6 +156,18 @@ def test_excel_mapping_matches_csv(bundle, tmp_path):
     assert data.observations.source_file.iloc[0] == "monitoring.xlsx:analyses"
 
 
+def test_custom_chinese_sheets_are_not_mistaken_for_native_v34(bundle, tmp_path):
+    path = bundle([reading('pH', 7, '1')])
+    target = tmp_path / 'custom.xlsx'
+    names = dict(samples='01_樣品登錄', analyses='02_分析資料庫', points='03_點位主檔')
+    with pd.ExcelWriter(target) as writer:
+        for name, sheet in names.items():
+            pd.read_csv(path / f'{name}.csv').to_excel(writer, sheet_name=sheet, index=False)
+    data = load_dataset(target, {'tables': {k: {'sheet': v} for k, v in names.items()}})
+    assert data.observations.valid.all()
+    assert not data.metadata
+
+
 def test_demo_is_valid_and_reproducible():
     root = Path(__file__).parents[1]
     config = load_config(root / "examples/config.yaml")

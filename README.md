@@ -4,6 +4,8 @@
 
 以 Python 建立的多參數環境監測與地質整合工具。支援 Excel／CSV 匯入、可追溯資料檢核、2D 分布、時間與深度比較、地質柱狀與剖面、互動 3D 實測展示及離線成果輸出。
 
+**監測資料庫v3.4可直接上傳**：下載 [已填合成範例](examples/workbooks/monitoring_v34_demo.xlsx) 或 [空白範本](examples/workbooks/monitoring_v34_blank.xlsx)，每個場址使用一份相同格式工作簿。平台自動辨識中文表格及場址，不需額外YAML。詳見 [v3.4匯入及多人使用說明](docs/WORKBOOK_V34.md)。
+
 內建 pH、EC、DO、DO 飽和度、ORP、TOC、Zn、水溫與濁度；可透過 YAML 增加其他連續數值參數。沒有內建法規判定值。`examples/demo` 是合成示範資料，不是實際調查結果。
 
 ## 安裝與啟動

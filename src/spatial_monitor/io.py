@@ -25,13 +25,13 @@ REQUIRED = {
     "water_levels": ["point_id", "date", "depth"],
 }
 MEDIUM = {"土壤": "soil", "水": "water", "地下水": "groundwater", "地表水": "surface_water",
-          "空氣": "air", "surface water": "surface_water"}
+          "空氣": "air", "系統水": "process_water", "surface water": "surface_water"}
 
 
 def _unit(value):
     value = str(value).strip().replace("µ", "u").replace("μ", "u")
-    return {"": "1", "-": "1", "pH": "1", "dimensionless": "1", "°C": "degC",
-            "℃": "degC", "percent": "%"}.get(value, value)
+    return {"": "1", "-": "1", "pH": "1", "dimensionless": "1", "無因次": "1", "°C": "degC",
+            "℃": "degC", "percent": "%", "umho/cm": "uS/cm", "mv": "mV"}.get(value, value)
 
 
 def conversion_factor(source, target, medium):
@@ -59,6 +59,14 @@ def _read_tables(path, config, issues):
     workbook = pd.ExcelFile(path) if path.is_file() and path.suffix.lower() == ".xlsx" else None
     if path.is_file() and workbook is None:
         raise ValueError("Use an .xlsx workbook or a directory containing CSV tables")
+    native = False
+    if workbook is not None and "02_分析資料庫" in workbook.sheet_names and "03_點位主檔" in workbook.sheet_names:
+        headers = next(workbook.book["02_分析資料庫"].iter_rows(min_row=1, max_row=1, values_only=True), ())
+        native = {"原始值", "結果單位", "關聯鍵"}.issubset(headers)
+    if native:
+        workbook.close()
+        from .workbook_v34 import read_workbook
+        return read_workbook(path, config, issues)
     tables = {}
     try:
         for name, fields in FIELDS.items():
@@ -98,7 +106,7 @@ def _read_tables(path, config, issues):
     finally:
         if workbook is not None:
             workbook.close()
-    return tables
+    return tables, {}
 
 
 def load_dataset(path, config=None):
@@ -110,7 +118,7 @@ def load_dataset(path, config=None):
     """
     config = load_config(config)
     issues = []
-    tables = _read_tables(path, config, issues)
+    tables, metadata = _read_tables(path, config, issues)
 
     def issue(table, index, code, message, severity="error", invalidate=True):
         frame = tables[table]
@@ -120,7 +128,7 @@ def load_dataset(path, config=None):
             frame.at[index, "valid"] = False
 
     for frame in tables.values():
-        frame["valid"] = not bool(frame.attrs.get("missing_required"))
+        frame["valid"] = frame.get("_source_valid", True) & (not bool(frame.attrs.get("missing_required")))
         for field in ("sample_id", "point_id", "parameter", "medium", "unit", "site", "basis",
                       "method", "reference_electrode", "temperature_compensated", "batch", "crs"):
             if field in frame:
@@ -188,7 +196,7 @@ def load_dataset(path, config=None):
     analyses = tables["analyses"]
     analyses["raw_value"] = analyses.value.copy()
     analyses["raw_unit"] = analyses.unit.copy()
-    analyses["raw_parameter"] = analyses.parameter.copy()
+    analyses["raw_parameter"] = analyses.get("分析項目", analyses.parameter).copy()
     analyses["raw_temperature"] = analyses.temperature.copy()
     analyses["raw_reference_temperature"] = analyses.reference_temperature.copy()
     analyses["comparison_temperature"] = np.nan
@@ -244,7 +252,7 @@ def load_dataset(path, config=None):
         analyses.at[index, "unit"] = target
         if factor != 1:
             issue("analyses", index, "unit_converted", f"{row.unit} → {target}; factor {factor:g}", "info", False)
-        raw = str(row.raw_value).strip()
+        raw = str(row.raw_value).strip().replace("＜", "<").replace("＞", ">")
         match = re.fullmatch(r"([<>]=?|≤|≥)\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)", raw)
         if match:
             analyses.at[index, "qualifier"] = match[1]
@@ -254,6 +262,10 @@ def load_dataset(path, config=None):
         if raw.upper() in ("ND", "N.D.", "NON-DETECT", "未檢出"):
             analyses.at[index, "qualifier"] = "ND"
             issue("analyses", index, "censored_value", "Non-detect retained without numeric substitution", "info")
+            continue
+        if raw.upper() in ("NA", "N/A", "N.A.", "-", "--", ""):
+            analyses.at[index, "qualifier"] = "NA"
+            issue("analyses", index, "missing_result", "Missing or not applicable result retained without substitution", "info")
             continue
         try:
             value = float(raw) * factor
@@ -341,4 +353,4 @@ def load_dataset(path, config=None):
         for col in ("x", "y", "surface_elevation"):
             frame[col] = pd.to_numeric(frame[col], errors="coerce")
     findings = pd.DataFrame(issues, columns=["severity", "table", "row", "code", "message"])
-    return Dataset(analyses, points, geology, water, findings)
+    return Dataset(analyses, points, geology, water, findings, config=config, metadata=metadata)

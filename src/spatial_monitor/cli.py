@@ -91,6 +91,7 @@ def main(argv=None):
     try:
         config = load_config(args.config)
         dataset = load_dataset(args.source, config)
+        config = dataset.config
         summary = {"observations": len(dataset.observations), "valid": int(dataset.observations.valid.sum()),
                    "issues": len(dataset.issues), "errors": int(dataset.issues.severity.eq("error").sum())}
         if args.command == "export":

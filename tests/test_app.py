@@ -123,3 +123,30 @@ def test_export_persists_filter_rerun_but_not_source_change(tmp_path, monkeypatc
     widget(app.text_input, "資料夾或Excel路徑").set_value(str(new_source)).run()
     clean(app)
     assert "下載完整成果ZIP" not in download_labels(app)
+
+
+def test_v34_site_switch_clears_filters_and_results(tmp_path):
+    from openpyxl import load_workbook
+    template = APP.parents[2] / 'examples/workbooks/monitoring_v34_demo.xlsx'
+    other = tmp_path / 'site_b.xlsx'
+    w = load_workbook(template)
+    w['00_使用說明']['C5'] = '場址B'
+    w.save(other)
+    w.close()
+    app = AppTest.from_file(str(APP), default_timeout=60).run()
+    widget(app.text_input, '資料夾或Excel路徑').set_value(str(template)).run()
+    clean(app)
+    assert app.metric[0].value == '288'
+    assert any('合成示範場址A' in s.value for s in app.success)
+    widget(app.selectbox, '場址').select('合成示範場址A（非實測）').run()
+    app.session_state['confirmed-geology'] = {'old': True}
+    app.session_state['volume-result'] = {'old': True}
+    app.session_state['export-result'] = {'old': True}
+    widget(app.text_input, '資料夾或Excel路徑').set_value(str(other)).run()
+    clean(app)
+    assert widget(app.selectbox, '場址').value == '全部'
+    assert any('場址B' in s.value for s in app.success)
+    assert 'confirmed-geology' not in app.session_state
+    assert 'volume-result' not in app.session_state
+    assert 'export-result' not in app.session_state
+    assert '下載完整成果ZIP' not in download_labels(app)

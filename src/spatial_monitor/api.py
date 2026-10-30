@@ -206,12 +206,13 @@ def create_app(*, api_keys=None, limits=None):
                         raise HTTPException(422, "ZIP must contain unique canonical CSV files at its root")
                     for name in names:
                         (folder / name).write_bytes(archive.read(name))
-            yield bounded(load_dataset(target)), load_config()
+            data = bounded(load_dataset(target, configured({})))
+            yield data, data.config
 
     def summary(data):
         return {"observations": len(data.observations), "valid_observations": int(data.observations.valid.sum()),
                 "points": len(data.points), "errors": int(data.issues.severity.eq("error").sum()),
-                "issues": records(data.issues), "data": records(data.observations)}
+                "issues": records(data.issues), "data": records(data.observations), "import": data.metadata}
 
     def bundle(data, config):
         from .export import export_dataset, zip_outputs

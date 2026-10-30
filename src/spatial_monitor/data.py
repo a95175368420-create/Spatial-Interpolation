@@ -1,5 +1,5 @@
 """Shared table contract for source data, normalized measurements and QA findings."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -11,6 +11,8 @@ class Dataset:
     geology: pd.DataFrame
     water_levels: pd.DataFrame
     issues: pd.DataFrame
+    config: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
 
 
 # Include these dimensions when comparing or interpolating measurements. An empty
